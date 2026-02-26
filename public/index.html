@@ -1024,7 +1024,7 @@
 // ══════════════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════════════
-const API = 'http://localhost:3000/api';
+const API = '';
 const PAGE_SIZE = 10;
 
 // State
@@ -1093,7 +1093,7 @@ let apiOnline = false;
 // ══════════════════════════════════════════════════════
 async function apiFetch(path) {
   try {
-    const r = await fetch(API + path, { signal: AbortSignal.timeout(3000) });
+    const r = await fetch('/api' + path, { signal: AbortSignal.timeout(5000) });
     if (!r.ok) throw new Error('not ok');
     return await r.json();
   } catch {

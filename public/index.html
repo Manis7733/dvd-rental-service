@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CineVault — DVD Rental</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0c;
+      --bg2: #111114;
+      --bg3: #18181d;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold2: #f0c96b;
+      --red: #e0443a;
+      --text: #e8e6df;
+      --muted: #6b6963;
+      --card-h: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 150px;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,10,12,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--gold);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .logo-text span { color: var(--gold); }
+
+    .nav-pills {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-pill {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .nav-pill:hover { color: var(--text); background: var(--bg3); }
+    .nav-pill.active { background: var(--gold); color: #000; font-weight: 600; }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 72px 40px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(42px, 6vw, 80px);
+      font-weight: 900;
+      line-height: 1;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      gap: 32px;
+      padding: 24px 40px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      overflow-x: auto;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: max-content;
+    }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stat-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      padding: 32px 40px 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+      max-width: 400px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px 10px 40px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input::placeholder { color: var(--muted); }
+    .search-input:focus { border-color: var(--gold); }
+
+    .filter-select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus { border-color: var(--gold); }
+
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .view-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      font-size: 16px;
+    }
+
+    .view-btn.active { background: var(--gold); color: #000; }
+    .view-btn:not(.active):hover { color: var(--text); }
+
+    .results-count {
+      margin-left: auto;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── TAB CONTENT SECTIONS ── */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── FILMS GRID ── */
+    .films-section { padding: 0 40px 60px; }
+
+    .grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .list-view {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* GRID CARD */
+    .film-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .film-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(201,168,76,0.3);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    }
+
+    .film-poster {
+      height: 160px;
+      background: var(--bg3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .film-poster::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, var(--bg2) 0%, transparent 60%);
+    }
+
+    .film-rating-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--gold);
+      z-index: 1;
+      backdrop-filter: blur(8px);
+    }
+
+    .film-info {
+      padding: 14px 16px;
+    }
+
+    .film-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #fff;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .film-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .film-rate {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    .film-length {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* LIST ROW */
+    .film-row {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .film-row:hover {
+      border-color: rgba(201,168,76,0.25);
+      background: var(--bg3);
+    }
+
+    .film-row-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      width: 30px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .film-row-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .film-row-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      flex: 1;
+    }
+
+    .film-row-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      border: 1px solid;
+    }
+
+    .badge-G    { color: #4caf7d; border-color: rgba(76,175,125,0.3); background: rgba(76,175,125,0.08); }
+    .badge-PG   { color: #5b9cf6; border-color: rgba(91,156,246,0.3); background: rgba(91,156,246,0.08); }
+    .badge-PG13 { color: var(--gold); border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.08); }
+    .badge-R    { color: #e0443a; border-color: rgba(224,68,58,0.3); background: rgba(224,68,58,0.08); }
+    .badge-NC17 { color: #b558f6; border-color: rgba(181,88,246,0.3); background: rgba(181,88,246,0.08); }
+
+    .film-row-rate {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--gold);
+      width: 60px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── CUSTOMERS SECTION ── */
+    .customers-section { padding: 0 40px 60px; }
+
+    .customer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .customer-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .customer-card:hover {
+      border-color: rgba(201,168,76,0.25);
+      transform: translateY(-2px);
+    }
+
+    .customer-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      flex-shrink: 0;
+    }
+
+    .customer-info { flex: 1; min-width: 0; }
+
+    .customer-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .customer-email {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .customer-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4caf7d;
+      box-shadow: 0 0 6px rgba(76,175,125,0.5);
+      flex-shrink: 0;
+    }
+
+    .customer-status.inactive { background: var(--muted); box-shadow: none; }
+
+    /* ── RENTALS SECTION ── */
+    .rentals-section { padding: 0 40px 60px; }
+
+    .rental-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    .rental-table thead th {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 16px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .rental-row {
+      background: var(--bg2);
+      transition: background 0.2s;
+      animation: fadeUp 0.35s ease both;
+    }
+
+    .rental-row:hover td { background: var(--bg3); }
+
+    .rental-row td {
+      padding: 14px 16px;
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      transition: background 0.2s;
+    }
+
+    .rental-row td:first-child {
+      border-left: 1px solid var(--border);
+      border-radius: 10px 0 0 10px;
+    }
+
+    .rental-row td:last-child {
+      border-right: 1px solid var(--border);
+      border-radius: 0 10px 10px 0;
+    }
+
+    .rental-id {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .returned-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .returned-yes { background: rgba(76,175,125,0.1); color: #4caf7d; }
+    .returned-no  { background: rgba(224,68,58,0.1);  color: var(--red); }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 32px 40px;
+    }
+
+    .page-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg2);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .page-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+    .page-btn.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .page-info {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 8px;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 540px;
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.25s;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-header {
+      padding: 28px 28px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .modal-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--bg3);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .modal-subtitle {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .modal-close {
+      margin-left: auto;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+    .modal-body {
+      padding: 24px 28px 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .modal-field { display: flex; flex-direction: column; gap: 4px; }
+    .modal-field.full { grid-column: 1 / -1; }
+
+    .field-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field-value {
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .field-value.gold { color: var(--gold); font-family: 'DM Mono', monospace; }
+
+    /* ── LOADING ── */
+    .loading-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .skeleton {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .skeleton-img {
+      height: 160px;
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .skeleton-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+    .skeleton-line {
+      height: 12px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+    }
+
+    .empty-icon { font-size: 64px; margin-bottom: 16px; }
+
+    .empty-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .empty-sub { font-size: 14px; color: var(--muted); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: var(--bg3);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 14px;
+      color: var(--text);
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 300px;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .section-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      .hero, .stats-bar, .controls, .films-section, .customers-section, .rentals-section, .pagination { padding-left: 16px; padding-right: 16px; }
+      .film-row-badge, .film-row-rate { display: none; }
+      .modal-body { grid-template-columns: 1fr; }
+    }
+
+    /* ── DIVIDER LINE ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 40px;
+    }
+
+    /* Stagger children animations */
+    .grid-view .film-card:nth-child(1)  { animation-delay: 0.0s; }
+    .grid-view .film-card:nth-child(2)  { animation-delay: 0.05s; }
+    .grid-view .film-card:nth-child(3)  { animation-delay: 0.10s; }
+    .grid-view .film-card:nth-child(4)  { animation-delay: 0.15s; }
+    .grid-view .film-card:nth-child(5)  { animation-delay: 0.20s; }
+    .grid-view .film-card:nth-child(6)  { animation-delay: 0.25s; }
+    .grid-view .film-card:nth-child(7)  { animation-delay: 0.30s; }
+    .grid-view .film-card:nth-child(8)  { animation-delay: 0.35s; }
+    .grid-view .film-card:nth-child(9)  { animation-delay: 0.40s; }
+    .grid-view .film-card:nth-child(10) { animation-delay: 0.45s; }
+
+    .list-view .film-row:nth-child(n) { animation-delay: calc(var(--i, 0) * 0.04s); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎬</div>
+    <div class="logo-text">Cine<span>Vault</span></div>
+  </div>
+  <nav class="nav-pills">
+    <button class="nav-pill active" onclick="switchTab('films', this)">Films</button>
+    <button class="nav-pill" onclick="switchTab('customers', this)">Customers</button>
+    <button class="nav-pill" onclick="switchTab('rentals', this)">Rentals</button>
+  </nav>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">— DVD Rental Management System</div>
+  <h1 class="hero-title">Browse the <em>Collection</em></h1>
+  <p class="hero-sub">Explore films, customers & rental history from the vault.</p>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat">
+    <div class="stat-num" id="statFilms">—</div>
+    <div class="stat-label">Total Films</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <div class="stat-num" id="statCustomers">—</div>
+    <div class="stat-label">Customers</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <div class="stat-num" id="statRentals">—</div>
+    <div class="stat-label">Rentals</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <div class="stat-num" id="statRevenue">—</div>
+    <div class="stat-label">Revenue</div>
+  </div>
+</div>
+
+<!-- ─────── FILMS TAB ─────── -->
+<div id="tab-films" class="tab-content active">
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Search films..." id="filmSearch" oninput="onFilmSearch(this.value)" />
+    </div>
+    <select class="filter-select" id="ratingFilter" onchange="onRatingFilter(this.value)">
+      <option value="">All Ratings</option>
+      <option value="G">G</option>
+      <option value="PG">PG</option>
+      <option value="PG-13">PG-13</option>
+      <option value="R">R</option>
+      <option value="NC-17">NC-17</option>
+    </select>
+    <select class="filter-select" id="sortFilter" onchange="onSortFilter(this.value)">
+      <option value="title">Title A–Z</option>
+      <option value="rate_desc">Rate ↓</option>
+      <option value="rate_asc">Rate ↑</option>
+      <option value="length_desc">Longest</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="gridBtn" onclick="setView('grid')" title="Grid view">⊞</button>
+      <button class="view-btn" id="listBtn" onclick="setView('list')" title="List view">☰</button>
+    </div>
+    <div class="results-count" id="filmsCount"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="films-section">
+    <div id="filmsContainer"></div>
+  </div>
+  <div class="pagination" id="filmsPagination"></div>
+</div>
+
+<!-- ─────── CUSTOMERS TAB ─────── -->
+<div id="tab-customers" class="tab-content">
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Search customers..." id="custSearch" oninput="onCustSearch(this.value)"/>
+    </div>
+    <div class="results-count" id="custsCount"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="customers-section">
+    <div class="customer-grid" id="customersContainer"></div>
+  </div>
+  <div class="pagination" id="custsPagination"></div>
+</div>
+
+<!-- ─────── RENTALS TAB ─────── -->
+<div id="tab-rentals" class="tab-content">
+  <div class="controls">
+    <select class="filter-select" id="returnedFilter" onchange="onReturnedFilter(this.value)">
+      <option value="">All Rentals</option>
+      <option value="returned">Returned</option>
+      <option value="active">Active</option>
+    </select>
+    <div class="results-count" id="rentalsCount"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="rentals-section">
+    <table class="rental-table">
+      <thead>
+        <tr>
+          <th>Rental ID</th>
+          <th>Customer</th>
+          <th>Film</th>
+          <th>Rented</th>
+          <th>Status</th>
+          <th>Payment</th>
+        </tr>
+      </thead>
+      <tbody id="rentalsContainer"></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="rentalsPagination"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modalInner">
+    <div class="modal-header">
+      <div class="modal-icon" id="modalIcon">🎬</div>
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal(true)">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════
+const API = 'http://localhost:3000/api';
+const PAGE_SIZE = 10;
+
+// State
+const state = {
+  films: { page: 1, search: '', rating: '', sort: 'title', view: 'grid', data: [], total: 0 },
+  customers: { page: 1, search: '', data: [], total: 0 },
+  rentals: { page: 1, returned: '', data: [], total: 0 },
+};
+
+// ── DEMO DATA (used when API is offline) ──────────────
+const DEMO_FILMS = [
+  { film_id:1,  title:'ACADEMY DINOSAUR',    rental_rate:'0.99', rating:'PG',    length:86  },
+  { film_id:2,  title:'ACE GOLDFINGER',       rental_rate:'4.99', rating:'G',     length:48  },
+  { film_id:3,  title:'ADAPTATION HOLES',     rental_rate:'2.99', rating:'NC-17', length:50  },
+  { film_id:4,  title:'AFFAIR PREJUDICE',     rental_rate:'2.99', rating:'G',     length:117 },
+  { film_id:5,  title:'AFRICAN EGG',          rental_rate:'2.99', rating:'G',     length:130 },
+  { film_id:6,  title:'AGENT TRUMAN',         rental_rate:'2.99', rating:'PG',    length:169 },
+  { film_id:7,  title:'AIRPLANE SIERRA',      rental_rate:'4.99', rating:'PG-13', length:62  },
+  { film_id:8,  title:'AIRPORT POLLOCK',      rental_rate:'4.99', rating:'R',     length:54  },
+  { film_id:9,  title:'ALABAMA DEVIL',        rental_rate:'2.99', rating:'PG-13', length:114 },
+  { film_id:10, title:'ALADDIN CALENDAR',     rental_rate:'4.99', rating:'NC-17', length:63  },
+  { film_id:11, title:'ALAMO VIDEOTAPE',      rental_rate:'0.99', rating:'G',     length:126 },
+  { film_id:12, title:'ALASKA PHANTOM',       rental_rate:'0.99', rating:'PG',    length:136 },
+  { film_id:13, title:'ALI FOREVER',          rental_rate:'4.99', rating:'PG',    length:150 },
+  { film_id:14, title:'ALICE FANTASIA',       rental_rate:'0.99', rating:'NC-17', length:94  },
+  { film_id:15, title:'ALIEN CENTER',         rental_rate:'2.99', rating:'R',     length:46  },
+  { film_id:16, title:'ALLEY EVOLUTION',      rental_rate:'2.99', rating:'NC-17', length:180 },
+  { film_id:17, title:'ALONE TRIP',           rental_rate:'0.99', rating:'R',     length:82  },
+  { film_id:18, title:'ALTER VICTORY',        rental_rate:'0.99', rating:'PG',    length:57  },
+  { film_id:19, title:'AMADEUS HOLY',         rental_rate:'0.99', rating:'PG',    length:113 },
+  { film_id:20, title:'AMELIE HELLFIGHTERS',  rental_rate:'4.99', rating:'R',     length:79  },
+];
+
+const DEMO_CUSTOMERS = [
+  { customer_id:1,  first_name:'MARY',    last_name:'SMITH',    email:'mary.smith@sakilacustomer.org',    active:1 },
+  { customer_id:2,  first_name:'PATRICIA',last_name:'JOHNSON',  email:'patricia.johnson@sakilacustomer.org', active:1 },
+  { customer_id:3,  first_name:'LINDA',   last_name:'WILLIAMS', email:'linda.williams@sakilacustomer.org', active:1 },
+  { customer_id:4,  first_name:'BARBARA', last_name:'JONES',    email:'barbara.jones@sakilacustomer.org', active:0 },
+  { customer_id:5,  first_name:'ELIZABETH',last_name:'BROWN',   email:'elizabeth.brown@sakilacustomer.org',active:1 },
+  { customer_id:6,  first_name:'JENNIFER',last_name:'DAVIS',    email:'jennifer.davis@sakilacustomer.org', active:1 },
+  { customer_id:7,  first_name:'MARIA',   last_name:'MILLER',   email:'maria.miller@sakilacustomer.org',  active:1 },
+  { customer_id:8,  first_name:'SUSAN',   last_name:'WILSON',   email:'susan.wilson@sakilacustomer.org',  active:0 },
+  { customer_id:9,  first_name:'MARGARET',last_name:'MOORE',    email:'margaret.moore@sakilacustomer.org',active:1 },
+  { customer_id:10, first_name:'DOROTHY', last_name:'TAYLOR',   email:'dorothy.taylor@sakilacustomer.org',active:1 },
+  { customer_id:11, first_name:'LISA',    last_name:'ANDERSON', email:'lisa.anderson@sakilacustomer.org', active:1 },
+  { customer_id:12, first_name:'NANCY',   last_name:'THOMAS',   email:'nancy.thomas@sakilacustomer.org',  active:1 },
+];
+
+const DEMO_RENTALS = [
+  { rental_id:1, customer:'MARY SMITH',     film:'ACADEMY DINOSAUR', rental_date:'2005-05-24', return_date:'2005-05-28', amount:'2.99' },
+  { rental_id:2, customer:'PATRICIA JOHNSON',film:'ACE GOLDFINGER',  rental_date:'2005-05-24', return_date:'2005-05-30', amount:'4.99' },
+  { rental_id:3, customer:'LINDA WILLIAMS', film:'ADAPTATION HOLES', rental_date:'2005-05-25', return_date:null,          amount:'2.99' },
+  { rental_id:4, customer:'BARBARA JONES',  film:'AFFAIR PREJUDICE', rental_date:'2005-05-25', return_date:'2005-06-01', amount:'2.99' },
+  { rental_id:5, customer:'ELIZABETH BROWN',film:'AFRICAN EGG',      rental_date:'2005-05-26', return_date:'2005-05-29', amount:'2.99' },
+  { rental_id:6, customer:'JENNIFER DAVIS', film:'AGENT TRUMAN',     rental_date:'2005-05-26', return_date:null,          amount:'2.99' },
+  { rental_id:7, customer:'MARIA MILLER',   film:'AIRPLANE SIERRA',  rental_date:'2005-05-27', return_date:'2005-06-03', amount:'4.99' },
+  { rental_id:8, customer:'SUSAN WILSON',   film:'AIRPORT POLLOCK',  rental_date:'2005-05-28', return_date:'2005-06-05', amount:'4.99' },
+  { rental_id:9, customer:'MARGARET MOORE', film:'ALABAMA DEVIL',    rental_date:'2005-05-28', return_date:null,          amount:'2.99' },
+  { rental_id:10,customer:'DOROTHY TAYLOR', film:'ALADDIN CALENDAR', rental_date:'2005-05-29', return_date:'2005-06-04', amount:'4.99' },
+];
+
+let apiOnline = false;
+
+// ══════════════════════════════════════════════════════
+//  API CALLS
+// ══════════════════════════════════════════════════════
+async function apiFetch(path) {
+  try {
+    const r = await fetch(API + path, { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) throw new Error('not ok');
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+async function init() {
+  // Check API
+  const test = await apiFetch('/films?page=1&size=1');
+  apiOnline = Array.isArray(test);
+
+  if (!apiOnline) {
+    showToast('Running in demo mode — connect your backend to see live data');
+  }
+
+  loadStats();
+  loadFilms();
+}
+
+// ══════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════
+async function loadStats() {
+  if (apiOnline) {
+    const [films, customers, rentals] = await Promise.all([
+      apiFetch('/films/count'),
+      apiFetch('/customers/count'),
+      apiFetch('/rentals/count'),
+    ]);
+    if (films?.count)     document.getElementById('statFilms').textContent = Number(films.count).toLocaleString();
+    if (customers?.count) document.getElementById('statCustomers').textContent = Number(customers.count).toLocaleString();
+    if (rentals?.count)   document.getElementById('statRentals').textContent = Number(rentals.count).toLocaleString();
+    document.getElementById('statRevenue').textContent = '$67.4K';
+  } else {
+    document.getElementById('statFilms').textContent     = '1,000';
+    document.getElementById('statCustomers').textContent = '599';
+    document.getElementById('statRentals').textContent   = '16,044';
+    document.getElementById('statRevenue').textContent   = '$67.4K';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  FILMS
+// ══════════════════════════════════════════════════════
+let filmDebounce;
+function onFilmSearch(v) {
+  clearTimeout(filmDebounce);
+  filmDebounce = setTimeout(() => { state.films.search = v; state.films.page = 1; loadFilms(); }, 300);
+}
+function onRatingFilter(v) { state.films.rating = v; state.films.page = 1; loadFilms(); }
+function onSortFilter(v)   { state.films.sort   = v; state.films.page = 1; loadFilms(); }
+
+function setView(v) {
+  state.films.view = v;
+  document.getElementById('gridBtn').classList.toggle('active', v === 'grid');
+  document.getElementById('listBtn').classList.toggle('active', v === 'list');
+  renderFilms();
+}
+
+async function loadFilms() {
+  const { page, search, rating, sort } = state.films;
+  renderFilmsLoading();
+
+  let films;
+  if (apiOnline) {
+    let url = `/films?page=${page}&size=${PAGE_SIZE}`;
+    if (search) url += `&title=${encodeURIComponent(search)}`;
+    if (rating) url += `&rating=${encodeURIComponent(rating)}`;
+    films = await apiFetch(url);
+  }
+
+  if (!films) {
+    let data = [...DEMO_FILMS];
+    if (search) data = data.filter(f => f.title.toLowerCase().includes(search.toLowerCase()));
+    if (rating) data = data.filter(f => f.rating === rating);
+    if (sort === 'rate_desc') data.sort((a,b) => b.rental_rate - a.rental_rate);
+    else if (sort === 'rate_asc') data.sort((a,b) => a.rental_rate - b.rental_rate);
+    else if (sort === 'length_desc') data.sort((a,b) => b.length - a.length);
+    else data.sort((a,b) => a.title.localeCompare(b.title));
+    state.films.total = data.length;
+    state.films.data  = data.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  } else {
+    state.films.data  = films;
+    state.films.total = 1000; // approximate
+  }
+
+  renderFilms();
+  renderPagination('filmsPagination', state.films, loadFilms);
+  document.getElementById('filmsCount').textContent =
+    `${state.films.total.toLocaleString()} film${state.films.total !== 1 ? 's' : ''}`;
+}
+
+function filmEmoji(title) {
+  const t = title.toLowerCase();
+  if (t.includes('academy') || t.includes('school')) return '🎓';
+  if (t.includes('alien') || t.includes('space')) return '👽';
+  if (t.includes('dragon') || t.includes('fire'))  return '🐉';
+  if (t.includes('love') || t.includes('affair'))  return '❤️';
+  if (t.includes('africa') || t.includes('safari'))return '🦁';
+  if (t.includes('alone') || t.includes('trip'))   return '🚶';
+  if (t.includes('airplane') || t.includes('fly')) return '✈️';
+  if (t.includes('alaska') || t.includes('ice'))   return '🏔️';
+  if (t.includes('music') || t.includes('jazz'))   return '🎵';
+  const list = ['🎬','🎥','🎞️','🍿','🎭','🌟','🎪','🎨','⭐','🏆'];
+  return list[title.charCodeAt(0) % list.length];
+}
+
+function badgeClass(r) {
+  if (!r) return '';
+  const m = {'G':'badge-G','PG':'badge-PG','PG-13':'badge-PG13','R':'badge-R','NC-17':'badge-NC17'};
+  return m[r] || '';
+}
+
+function renderFilmsLoading() {
+  const c = document.getElementById('filmsContainer');
+  c.className = 'loading-grid';
+  c.innerHTML = Array(10).fill('').map(() => `
+    <div class="skeleton">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line" style="width:80%"></div>
+        <div class="skeleton-line" style="width:50%"></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderFilms() {
+  const c    = document.getElementById('filmsContainer');
+  const data = state.films.data;
+
+  if (!data.length) {
+    c.className = '';
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-title">No films found</div><div class="empty-sub">Try adjusting your search or filters.</div></div>`;
+    return;
+  }
+
+  if (state.films.view === 'grid') {
+    c.className = 'grid-view';
+    c.innerHTML = data.map(f => `
+      <div class="film-card" onclick="openFilmModal(${f.film_id})">
+        <div class="film-poster">
+          ${filmEmoji(f.title)}
+          <div class="film-rating-badge">${f.rating || '—'}</div>
+        </div>
+        <div class="film-info">
+          <div class="film-title">${f.title}</div>
+          <div class="film-meta">
+            <span class="film-rate">$${parseFloat(f.rental_rate).toFixed(2)}</span>
+            <span class="film-length">${f.length ? f.length + ' min' : ''}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  } else {
+    c.className = 'list-view';
+    c.innerHTML = data.map((f, i) => `
+      <div class="film-row" onclick="openFilmModal(${f.film_id})" style="--i:${i}">
+        <span class="film-row-num">${((state.films.page-1)*PAGE_SIZE)+i+1}</span>
+        <div class="film-row-icon">${filmEmoji(f.title)}</div>
+        <span class="film-row-title">${f.title}</span>
+        <span class="film-row-badge ${badgeClass(f.rating)}">${f.rating || '—'}</span>
+        <span class="film-row-rate">$${parseFloat(f.rental_rate).toFixed(2)}</span>
+      </div>`).join('');
+  }
+}
+
+function openFilmModal(id) {
+  const f = state.films.data.find(x => x.film_id === id);
+  if (!f) return;
+  document.getElementById('modalIcon').textContent = filmEmoji(f.title);
+  document.getElementById('modalTitle').textContent = f.title;
+  document.getElementById('modalSubtitle').textContent = 'FILM DETAILS';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-field">
+      <div class="field-label">Film ID</div>
+      <div class="field-value gold">#${f.film_id}</div>
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Rating</div>
+      <div class="field-value"><span class="film-row-badge ${badgeClass(f.rating)}">${f.rating || '—'}</span></div>
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Rental Rate</div>
+      <div class="field-value gold">$${parseFloat(f.rental_rate).toFixed(2)}</div>
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Length</div>
+      <div class="field-value">${f.length ? f.length + ' min' : '—'}</div>
+    </div>
+    ${f.description ? `<div class="modal-field full"><div class="field-label">Description</div><div class="field-value" style="font-size:14px;color:var(--muted);line-height:1.6">${f.description}</div></div>` : ''}
+  `;
+  openModal();
+}
+
+// ══════════════════════════════════════════════════════
+//  CUSTOMERS
+// ══════════════════════════════════════════════════════
+let custDebounce;
+function onCustSearch(v) {
+  clearTimeout(custDebounce);
+  custDebounce = setTimeout(() => { state.customers.search = v; state.customers.page = 1; loadCustomers(); }, 300);
+}
+
+async function loadCustomers() {
+  const { page, search } = state.customers;
+
+  let customers;
+  if (apiOnline) {
+    let url = `/customers?page=${page}&size=${PAGE_SIZE}`;
+    if (search) url += `&name=${encodeURIComponent(search)}`;
+    customers = await apiFetch(url);
+  }
+
+  if (!customers) {
+    let data = [...DEMO_CUSTOMERS];
+    if (search) {
+      const s = search.toLowerCase();
+      data = data.filter(c => `${c.first_name} ${c.last_name}`.toLowerCase().includes(s) || c.email.toLowerCase().includes(s));
+    }
+    state.customers.total = data.length;
+    state.customers.data  = data.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  } else {
+    state.customers.data  = customers;
+    state.customers.total = 599;
+  }
+
+  renderCustomers();
+  renderPagination('custsPagination', state.customers, loadCustomers);
+  document.getElementById('custsCount').textContent =
+    `${state.customers.total.toLocaleString()} customer${state.customers.total !== 1 ? 's' : ''}`;
+}
+
+const AVATAR_COLORS = ['#c9a84c','#5b9cf6','#4caf7d','#e0443a','#b558f6','#f06292'];
+
+function renderCustomers() {
+  const c    = document.getElementById('customersContainer');
+  const data = state.customers.data;
+
+  if (!data.length) {
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No customers found</div><div class="empty-sub">Try a different search.</div></div>`;
+    return;
+  }
+
+  c.innerHTML = data.map((cu, i) => {
+    const col = AVATAR_COLORS[cu.customer_id % AVATAR_COLORS.length];
+    const initials = (cu.first_name[0] + cu.last_name[0]);
+    return `
+    <div class="customer-card" onclick="openCustomerModal(${cu.customer_id})">
+      <div class="customer-avatar" style="background:${col}20;color:${col};border:1px solid ${col}40">${initials}</div>
+      <div class="customer-info">
+        <div class="customer-name">${cu.first_name} ${cu.last_name}</div>
+        <div class="customer-email">${cu.email}</div>
+      </div>
+      <div class="customer-status ${cu.active ? '' : 'inactive'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function openCustomerModal(id) {
+  const c = state.customers.data.find(x => x.customer_id === id);
+  if (!c) return;
+  const col = AVATAR_COLORS[c.customer_id % AVATAR_COLORS.length];
+  document.getElementById('modalIcon').textContent = c.first_name[0] + c.last_name[0];
+  document.getElementById('modalIcon').style.cssText = `background:${col}20;color:${col};border:1px solid ${col}40;font-family:'Playfair Display',serif;font-size:20px;font-weight:700;`;
+  document.getElementById('modalTitle').textContent = `${c.first_name} ${c.last_name}`;
+  document.getElementById('modalSubtitle').textContent = 'CUSTOMER PROFILE';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-field">
+      <div class="field-label">Customer ID</div>
+      <div class="field-value gold">#${c.customer_id}</div>
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Status</div>
+      <div class="field-value">${c.active ? '🟢 Active' : '⚫ Inactive'}</div>
+    </div>
+    <div class="modal-field full">
+      <div class="field-label">Email</div>
+      <div class="field-value" style="font-family:'DM Mono',monospace;font-size:13px">${c.email}</div>
+    </div>
+  `;
+  openModal();
+}
+
+// ══════════════════════════════════════════════════════
+//  RENTALS
+// ══════════════════════════════════════════════════════
+function onReturnedFilter(v) { state.rentals.returned = v; state.rentals.page = 1; loadRentals(); }
+
+async function loadRentals() {
+  const { page, returned } = state.rentals;
+
+  let rentals;
+  if (apiOnline) {
+    let url = `/rentals?page=${page}&size=${PAGE_SIZE}`;
+    if (returned) url += `&status=${returned}`;
+    rentals = await apiFetch(url);
+  }
+
+  if (!rentals) {
+    let data = [...DEMO_RENTALS];
+    if (returned === 'returned') data = data.filter(r => r.return_date);
+    if (returned === 'active')   data = data.filter(r => !r.return_date);
+    state.rentals.total = data.length;
+    state.rentals.data  = data.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  } else {
+    state.rentals.data  = rentals;
+    state.rentals.total = 16044;
+  }
+
+  renderRentals();
+  renderPagination('rentalsPagination', state.rentals, loadRentals);
+  document.getElementById('rentalsCount').textContent =
+    `${state.rentals.total.toLocaleString()} rental${state.rentals.total !== 1 ? 's' : ''}`;
+}
+
+function renderRentals() {
+  const tbody = document.getElementById('rentalsContainer');
+  const data  = state.rentals.data;
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:60px;color:var(--muted)">No rentals found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => `
+    <tr class="rental-row">
+      <td><span class="rental-id">#${r.rental_id}</span></td>
+      <td style="font-weight:500">${r.customer}</td>
+      <td style="font-family:'Playfair Display',serif;font-size:14px">${r.film}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${r.rental_date}</td>
+      <td><span class="returned-badge ${r.return_date ? 'returned-yes' : 'returned-no'}">${r.return_date ? '✓ Returned' : '● Active'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--gold)">$${r.amount}</td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  PAGINATION
+// ══════════════════════════════════════════════════════
+function renderPagination(elId, s, fn) {
+  const el = document.getElementById(elId);
+  const totalPages = Math.ceil(s.total / PAGE_SIZE) || 1;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="gotoPage('${elId}',${s.page-1})" ${s.page===1?'disabled':''}>←</button>`;
+
+  const range = [];
+  for (let i=1; i<=totalPages; i++) {
+    if (i===1 || i===totalPages || Math.abs(i-s.page)<=1) range.push(i);
+    else if (range[range.length-1] !== '…') range.push('…');
+  }
+
+  range.forEach(p => {
+    if (p === '…') html += `<span class="page-info">…</span>`;
+    else html += `<button class="page-btn ${p===s.page?'active':''}" onclick="gotoPage('${elId}',${p})">${p}</button>`;
+  });
+
+  html += `<button class="page-btn" onclick="gotoPage('${elId}',${s.page+1})" ${s.page===totalPages?'disabled':''}>→</button>`;
+  el.innerHTML = html;
+
+  // Bind gotoPage to correct tab
+  window[`_pageFn_${elId}`] = fn;
+  window[`_pageState_${elId}`] = s;
+}
+
+function gotoPage(elId, p) {
+  const s  = window[`_pageState_${elId}`];
+  const fn = window[`_pageFn_${elId}`];
+  if (!s || !fn) return;
+  const totalPages = Math.ceil(s.total / PAGE_SIZE) || 1;
+  s.page = Math.max(1, Math.min(totalPages, p));
+  fn();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  btn.classList.add('active');
+
+  if (name === 'customers' && !state.customers.data.length) loadCustomers();
+  if (name === 'rentals'   && !state.rentals.data.length)   loadRentals();
+}
+
+// ══════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalIcon').style.cssText = '';
+}
+
+function closeModal(e) {
+  if (e === true || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ══════════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal(true);
+});
+
+// ── BOOT ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
